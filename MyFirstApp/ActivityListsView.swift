@@ -56,7 +56,7 @@ struct ActivityListsView: View {
                         }
                     }
                     .padding(.horizontal, 23)
-                    .padding(.top, 50)
+                    .padding(.top, 40)
                     
                     // Scrollable Time List
                     ScrollView {
@@ -91,6 +91,16 @@ struct ActivityListsView: View {
                                     }
                                     .padding(.top, 2)
                                     
+                                    VStack {
+                                        Text("Online class")
+                                            .font(.headline)
+                                        
+                                        Text("08.00-10.00")
+                                            .font(.subheadline)
+                                    }
+                                    .foregroundStyle(Color.white)
+                                    .padding(.leading, 20)
+                                    
                                     Spacer()
                                 }
                                 .padding(.leading, 13)
@@ -99,7 +109,7 @@ struct ActivityListsView: View {
                         }
                         .padding(.bottom, 50)
                     }
-                    .padding(.top, 10)
+                    .padding(.top, 20)
                     
                     Spacer()
                     
