@@ -42,7 +42,7 @@ struct ContentView: View {
                     Spacer()
                     
                     // Ganti Button jadi NavigationLink
-                    NavigationLink(destination: TimerView()) {
+                    NavigationLink(destination: ActivityListsView()) {
                         Text("START")
                             .frame(maxWidth: .infinity, maxHeight: 50)
                             .background(Color.redButton)

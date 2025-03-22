@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct ActivityListsView: View {
+    @State private var freeTimeIntervals: [FreeTimeSlot] = []
+    @State private var isNavigatingToLoadingView = false
     @State private var activities: [(start: Date, end: Date, description: String)] = []
     @State private var showModal = false
-    let times = (0...24).map { String(format: "%02d.00", $0) } // mulai dari 01.00 sampai 24.00
+    let times = (0..<25).map { String(format: "%02d.00", $0) } // 00.00 hingga 23.00 // mulai dari 01.00 sampai 24.00
     
     var body: some View {
         NavigationStack {
@@ -60,74 +62,96 @@ struct ActivityListsView: View {
                     
                     // Scrollable Time List
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 0) {
-                            ForEach(times.indices, id: \.self) { index in
-                                HStack(alignment: .top, spacing: 0) {
-                                    Text(times[index])
-                                        .font(.headline)
-                                        .foregroundStyle(Color.black)
-                                        .frame(width: 60, alignment: .leading)
-                                        .padding(.horizontal, 0)
-                                    
-                                    VStack(spacing: 0) {
-                                        ZStack {
-                                            Circle()
-                                                .strokeBorder(Color.red, lineWidth: 2)
-                                                .background(Circle().fill(Color.white))
-                                                .frame(width: 16, height: 16)
-                                            
-                                            Circle()
-                                                .strokeBorder(Color.white, lineWidth: 1)
-                                                .background(Circle().fill(Color.red))
-                                                .frame(width: 11, height: 11)
-                                        }
-                                        .padding(.bottom, 3)
-                                        
-                                        if index < times.count - 1 {
-                                            Rectangle()
-                                                .fill(Color.gray.opacity(0.4))
-                                                .frame(width: 2, height: 50)
-                                        }
-                                    }
-                                    .padding(.top, 2)
-                                    
-                                    VStack {
-                                        Text("Online class")
+                        ZStack(alignment: .topLeading) {
+                            VStack(alignment: .leading, spacing: 0) {
+                                ForEach(times.indices, id: \.self) { index in
+                                    HStack(alignment: .top, spacing: 0) {
+                                        Text(times[index])
                                             .font(.headline)
-                                        
-                                        Text("08.00-10.00")
-                                            .font(.subheadline)
+                                            .foregroundStyle(Color.black)
+                                            .frame(width: 60, alignment: .leading)
+                                            .padding(.bottom, 40)
+
+                                        VStack(spacing: 0) {
+                                            ZStack {
+                                                Circle()
+                                                    .strokeBorder(Color.red, lineWidth: 2)
+                                                    .background(Circle().fill(Color.white))
+                                                    .frame(width: 16, height: 16)
+
+                                                Circle()
+                                                    .strokeBorder(Color.white, lineWidth: 1)
+                                                    .background(Circle().fill(Color.red))
+                                                    .frame(width: 11, height: 11)
+                                            }
+                                            .padding(.bottom, 3)
+
+                                            if index < times.count - 1 {
+                                                Rectangle()
+                                                    .fill(Color.gray.opacity(0.4))
+                                                    .frame(width: 2, height: 50)
+                                            }
+                                        }
+                                        .padding(.top, 2)
+
+                                        Spacer()
                                     }
-                                    .foregroundStyle(Color.white)
-                                    .padding(.leading, 20)
-                                    
-                                    Spacer()
+                                    .padding(.leading, 13)
+                                    .padding(.vertical, 0)
+                                    .frame(height: 60) // Set fixed height agar setiap baris konsisten
                                 }
-                                .padding(.leading, 13)
-                                .padding(.vertical, 0)
+                            }
+                            .padding(.top, 11)
+                            
+                            // Overlay untuk Activity Cards tanpa memengaruhi layout utama
+                            ForEach(activities.indices, id: \.self) { i in
+                                let activity = activities[i]
+                                let calendar = Calendar.current
+                                let startHour = calendar.component(.hour, from: activity.start)
+                                let startMinute = calendar.component(.minute, from: activity.start)
+                                let duration = activity.end.timeIntervalSince(activity.start) / 60.0 // durasi dalam menit
+                                let height = CGFloat(duration * 1)
+
+                                // Posisi vertical = (startHour * tinggiBaris) + (startMinute / 60 * tinggiBaris)
+                                let yOffset = CGFloat(startHour) * 61 + CGFloat(startMinute) / 60 * 61 + 8 // +8 for padding correction
+
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.gray.opacity(0.6))
+                                    .frame(width: 240, height: height)
+                                    .overlay(
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(activity.description)
+                                                .font(.headline)
+                                            Text(timeRangeString(start: activity.start, end: activity.end))
+                                                .font(.subheadline)
+                                        }
+                                        .foregroundStyle(Color.white)
+                                        .padding(8),
+                                        alignment: .topLeading
+                                    )
+                                    .offset(x: 120, y: yOffset) // x untuk geser ke kanan, y untuk posisikan secara vertikal
                             }
                         }
                         .padding(.bottom, 50)
                     }
                     .padding(.top, 20)
-                    
+
                     Spacer()
                     
-                    Button(action: {
-                        // Action here
-                    }) {
+                    NavigationLink(destination: LoadingView()) {
                         Text("Calculate")
                             .font(.system(size: 24, weight: .regular, design: .rounded))
-                            .frame(width: 200)
+                            .frame(width: 150, height: 25)
                             .padding()
-                            .background(Color.black.opacity(0.2))
-                            .foregroundColor(.white.opacity(0.4))
+                            .background(Color.bgButton)
+                            .foregroundColor(.redTimer)
                             .cornerRadius(16)
-                            .padding(.horizontal, 20)
                             .padding(.bottom, 20)
+                            .shadow(radius: 4, x: 0, y: 4)
                     }
                     .padding(.bottom, 30)
-                    .disabled(true)
+                    .disabled(activities.isEmpty)
+    
                 }
                 if showModal {
                     Color.black.opacity(0.4)
@@ -141,13 +165,53 @@ struct ActivityListsView: View {
                 }
             }
         }
+        .navigationBarBackButtonHidden(true)
     }
+    
+    func timeString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH.mm"
+        return formatter.string(from: date)
+    }
+    
+    func timeRangeString(start: Date, end: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH.mm"
+        return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+    }
+
     
     func dateString(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMMM, yyyy"
         return formatter.string(from: date)
     }
+    
+    func calculateFreeTimeIntervals() -> [FreeTimeSlot] {
+        let calendar = Calendar.current
+        let startOfDay = calendar.date(bySettingHour: 0, minute: 0, second: 0, of: Date())!
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: Date())!
+
+        let sortedActivities = activities.sorted { $0.start < $1.start }
+        var freeTimeSlots: [FreeTimeSlot] = []
+        var lastEnd = startOfDay
+
+        for activity in sortedActivities {
+            if activity.start > lastEnd {
+                let interval = FreeTimeSlot(start: lastEnd, end: activity.start)
+                freeTimeSlots.append(interval)
+            }
+            lastEnd = max(lastEnd, activity.end)
+        }
+
+        if lastEnd < endOfDay {
+            let interval = FreeTimeSlot(start: lastEnd, end: endOfDay)
+            freeTimeSlots.append(interval)
+        }
+
+        return freeTimeSlots
+    }
+
 }
 
 // Reusable custom shape
@@ -185,10 +249,13 @@ struct AddActivityModal: View {
                 Spacer()
                 
                 Button("Save") {
-                    activities.append((start: startTime, end: endTime, description: activityDesc))
-                    showModal = false
+                    if endTime > startTime {
+                        activities.append((start: startTime, end: endTime, description: activityDesc))
+                        showModal = false
+                    }
                 }
-                .disabled(activityDesc.isEmpty)
+                .disabled(activityDesc.isEmpty || endTime <= startTime)
+
             }
             .padding(.horizontal)
             .padding(.bottom, 10) // Merapat atas
@@ -239,6 +306,13 @@ struct AddActivityModal: View {
         }
     }
 }
+
+struct FreeTimeSlot: Identifiable {
+    let id = UUID()
+    let start: Date
+    let end: Date
+}
+
 
 #Preview {
     ActivityListsView()

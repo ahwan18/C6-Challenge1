@@ -49,7 +49,7 @@ struct LoadingView: View {
                     }
                     // Navigasi otomatis setelah loading selesai
                     .navigationDestination(isPresented: $navigate) {
-                        ContentView()
+                        TimerView()
                 }
             }
         }
